@@ -7,6 +7,8 @@ import {
   CheckCircle2,
   AlertTriangle,
   FileCheck,
+  Trash2,
+  RotateCcw,
 } from 'lucide-react'
 import { backupService, ValidationResult } from '@/services/backupService'
 import { useDailyFlow } from '@/contexts/DailyFlowContext'
@@ -18,12 +20,14 @@ interface BackupModalProps {
 }
 
 export const BackupModal: React.FC<BackupModalProps> = ({ isOpen, onClose }) => {
-  const { reloadAllData } = useDailyFlow()
+  const { reloadAllData, clearAllData, resetRoutines, resetTasks, hasSampleData } = useDailyFlow()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [validation, setValidation] = useState<ValidationResult | null>(null)
   const [importSuccess, setImportSuccess] = useState(false)
+  const [clearSuccess, setClearSuccess] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
+  const [showClearConfirm, setShowClearConfirm] = useState(false)
 
   // Close on Escape key
   React.useEffect(() => {
@@ -231,6 +235,89 @@ export const BackupModal: React.FC<BackupModalProps> = ({ isOpen, onClose }) => 
                   </button>
                 </div>
               </div>
+            </div>
+          )}
+        </div>
+
+        {/* Clear Notice */}
+        {clearSuccess && (
+          <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center gap-2">
+            <CheckCircle2 className="w-4.5 h-4.5 text-emerald-600 shrink-0" />
+            <span>Đã xóa sạch dữ liệu mẫu! Bạn có thể bắt đầu nhập dữ liệu thật của mình.</span>
+          </div>
+        )}
+
+        {/* Data Management & Clean Slate Section */}
+        <div className="p-4 rounded-xl border border-df-border bg-white shadow-2xs space-y-3">
+          <div>
+            <h4 className="text-xs font-bold text-df-text flex items-center gap-1.5">
+              <RotateCcw className="w-3.5 h-3.5 text-amber-500" />
+              <span>Khởi tạo & Làm sạch dữ liệu</span>
+            </h4>
+            <p className="text-[11px] text-df-muted mt-0.5 leading-relaxed">
+              Dành cho bạn muốn xóa dữ liệu mẫu demo để bắt đầu sử dụng thật hoặc nạp lại lịch mẫu.
+            </p>
+          </div>
+
+          {showClearConfirm ? (
+            <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 space-y-2 text-xs">
+              <div className="flex items-center gap-2 text-rose-800 font-bold">
+                <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+                <span>Xác nhận xóa sạch toàn bộ?</span>
+              </div>
+              <p className="text-[11px] text-rose-700">
+                Toàn bộ Routine, Task và lịch sử sẽ được xóa về trang trắng để bạn tự nhập mới.
+              </p>
+              <div className="flex items-center justify-end gap-2 pt-1">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowClearConfirm(false)}
+                  className="text-xs"
+                >
+                  Hủy
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => {
+                    clearAllData()
+                    setShowClearConfirm(false)
+                    setClearSuccess(true)
+                    setTimeout(() => setClearSuccess(false), 3000)
+                  }}
+                  className="bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs"
+                >
+                  <Trash2 className="w-3.5 h-3.5" /> Xóa sạch & Bắt đầu mới
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowClearConfirm(true)}
+                className="flex-1 gap-1.5 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-200 font-semibold"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>{hasSampleData ? 'Xóa sạch dữ liệu mẫu' : 'Xóa toàn bộ (Trang trắng)'}</span>
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  resetRoutines()
+                  resetTasks()
+                  setClearSuccess(false)
+                }}
+                className="flex-1 gap-1.5 text-xs font-semibold"
+              >
+                <RotateCcw className="w-3.5 h-3.5" /> Nạp lại mẫu Demo
+              </Button>
             </div>
           )}
         </div>

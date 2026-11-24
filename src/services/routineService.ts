@@ -66,13 +66,20 @@ export const routineService = {
   },
 
   /**
-   * Loads all routine templates from storage with validation and deduplication
+   * Loads all routine templates from storage with validation and deduplication.
+   * If user intentionally deletes all routines, returns empty array without force-reloading defaults.
    */
   getRoutines(): RoutineItem[] {
     const rawData = storageService.get<unknown>(STORAGE_KEYS.ROUTINES, null)
-    if (!rawData || !Array.isArray(rawData)) {
+
+    // Key has never been set in localStorage -> First time visit
+    if (rawData === null) {
       storageService.set(STORAGE_KEYS.ROUTINES, DEFAULT_ROUTINES)
       return DEFAULT_ROUTINES
+    }
+
+    if (!Array.isArray(rawData)) {
+      return []
     }
 
     // Validate and deduplicate by ID
@@ -98,12 +105,14 @@ export const routineService = {
       }
     }
 
-    if (validRoutines.length === 0) {
-      storageService.set(STORAGE_KEYS.ROUTINES, DEFAULT_ROUTINES)
-      return DEFAULT_ROUTINES
-    }
-
     return validRoutines
+  },
+
+  /**
+   * Clears all routine templates
+   */
+  clearRoutines(): void {
+    storageService.set(STORAGE_KEYS.ROUTINES, [])
   },
 
   /**

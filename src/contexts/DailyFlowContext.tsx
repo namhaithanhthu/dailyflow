@@ -15,6 +15,7 @@ interface DailyFlowContextType {
   todayProgress: DailyProgress
   streakInfo: StreakInfo
   isLoaded: boolean
+  hasSampleData: boolean
 
   // Routine Actions
   createRoutine: (data: Omit<RoutineItem, 'id' | 'createdAt' | 'updatedAt'>) => RoutineItem
@@ -23,6 +24,7 @@ interface DailyFlowContextType {
   isRoutineCompleted: (routineId: string, dateString: string) => boolean
   toggleRoutineCompletion: (routineId: string, dateString: string) => boolean
   resetRoutines: () => void
+  clearRoutines: () => void
 
   // Task Actions
   createTask: (data: Omit<TaskItem, 'id' | 'createdAt' | 'updatedAt'>) => TaskItem
@@ -30,8 +32,10 @@ interface DailyFlowContextType {
   deleteTask: (id: string) => void
   toggleTask: (id: string) => TaskItem | null
   resetTasks: () => void
+  clearTasks: () => void
 
   // Reload & Helpers
+  clearAllData: () => void
   reloadAllData: () => void
   getDayProgress: (dateStr: string) => DailyProgress
 }
@@ -131,9 +135,22 @@ export const DailyFlowProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     []
   )
 
+  const hasSampleData = useMemo(() => {
+    const hasSampleRoutine = routines.some(
+      (r) => r.id.startsWith('rt_university') || r.id.startsWith('rt_data_analytics') || r.id.startsWith('rt_english')
+    )
+    const hasSampleTask = tasks.some((t) => t.id.startsWith('task_demo_'))
+    return hasSampleRoutine || hasSampleTask
+  }, [routines, tasks])
+
   const resetRoutines = useCallback(() => {
     routineService.saveRoutines(DEFAULT_ROUTINES)
     setRoutines(DEFAULT_ROUTINES)
+  }, [])
+
+  const clearRoutines = useCallback(() => {
+    routineService.clearRoutines()
+    setRoutines([])
   }, [])
 
   // --- Task Handlers ---
@@ -175,6 +192,22 @@ export const DailyFlowProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setTasks(DEFAULT_TASKS)
   }, [])
 
+  const clearTasks = useCallback(() => {
+    taskService.clearTasks()
+    setTasks([])
+  }, [])
+
+  // Clear all data (Routines, Tasks, Completions, History) to start fresh
+  const clearAllData = useCallback(() => {
+    routineService.clearRoutines()
+    taskService.clearTasks()
+    routineService.saveCompletions({})
+    progressService.saveHistory({})
+    setRoutines([])
+    setTasks([])
+    setCompletions({})
+  }, [])
+
   const value = {
     routines,
     completions,
@@ -182,17 +215,21 @@ export const DailyFlowProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     todayProgress,
     streakInfo,
     isLoaded,
+    hasSampleData,
     createRoutine,
     updateRoutine,
     deleteRoutine,
     isRoutineCompleted,
     toggleRoutineCompletion,
     resetRoutines,
+    clearRoutines,
     createTask,
     updateTask,
     deleteTask,
     toggleTask,
     resetTasks,
+    clearTasks,
+    clearAllData,
     reloadAllData,
     getDayProgress,
   }

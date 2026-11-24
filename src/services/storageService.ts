@@ -8,6 +8,9 @@ export const STORAGE_KEYS = {
   TASKS: 'dailyflow_tasks_v1',
   DAILY_HISTORY: 'dailyflow_daily_history_v1',
   BEST_STREAK: 'dailyflow_best_streak_v1',
+  INITIALIZED: 'dailyflow_initialized_v1',
+  ACTIVE_TAB: 'dailyflow_active_tab_v1',
+  DISMISSED_SAMPLE_BANNER: 'dailyflow_dismissed_sample_banner_v1',
 } as const
 
 export const storageService = {
@@ -40,6 +43,17 @@ export const storageService = {
       window.localStorage.removeItem(key)
     } catch (err) {
       console.error(`[storageService] Error removing key "${key}":`, err)
+    }
+  },
+
+  clearAppStorage(): void {
+    try {
+      if (typeof window === 'undefined' || !window.localStorage) return
+      Object.values(STORAGE_KEYS).forEach((key) => {
+        window.localStorage.removeItem(key)
+      })
+    } catch (err) {
+      console.error('[storageService] Error clearing app storage:', err)
     }
   },
 }

@@ -76,13 +76,20 @@ export const DEFAULT_TASKS: TaskItem[] = [
 
 export const taskService = {
   /**
-   * Loads all tasks from LocalStorage with basic validation and deduplication
+   * Loads all tasks from LocalStorage with basic validation and deduplication.
+   * If user intentionally deletes all tasks, returns empty array without force-reloading defaults.
    */
   getTasks(): TaskItem[] {
     const rawData = storageService.get<unknown>(STORAGE_KEYS.TASKS, null)
-    if (!rawData || !Array.isArray(rawData)) {
+
+    // Key has never been set in localStorage -> First time visit
+    if (rawData === null) {
       storageService.set(STORAGE_KEYS.TASKS, DEFAULT_TASKS)
       return DEFAULT_TASKS
+    }
+
+    if (!Array.isArray(rawData)) {
+      return []
     }
 
     const validTasks: TaskItem[] = []
@@ -106,12 +113,14 @@ export const taskService = {
       }
     }
 
-    if (validTasks.length === 0) {
-      storageService.set(STORAGE_KEYS.TASKS, DEFAULT_TASKS)
-      return DEFAULT_TASKS
-    }
-
     return validTasks
+  },
+
+  /**
+   * Clears all tasks from LocalStorage
+   */
+  clearTasks(): void {
+    storageService.set(STORAGE_KEYS.TASKS, [])
   },
 
   /**
